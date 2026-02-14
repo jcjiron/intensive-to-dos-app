@@ -7,7 +7,6 @@ import { TaskInput } from "@/components/task-input"
 import { ArchiveSidebar, MobileArchiveView } from "@/components/archive-sidebar"
 import { EscalationBanner } from "@/components/escalation-banner"
 import { RollToast } from "@/components/roll-toast"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sheet,
   SheetContent,
@@ -27,6 +26,7 @@ import { cn } from "@/lib/utils"
 export function IntensiveTodos() {
   const {
     tasks,
+    completedItems,
     archivedBatches,
     lastRoll,
     lastEscalated,
@@ -34,6 +34,7 @@ export function IntensiveTodos() {
     addTask,
     toggleTask,
     deleteTask,
+    deleteCompleted,
     resetDemo,
     clearEscalationGlow,
     clearRoll,
@@ -72,8 +73,8 @@ export function IntensiveTodos() {
   }
 
   const activeTasks = tasks.filter((t) => !t.done)
-  const doneTasks = tasks.filter((t) => t.done)
   const isEscalationZone = activeTasks.length >= 20
+  const totalSidebarCount = completedItems.length + archivedBatches.length
 
   return (
     <div
@@ -110,13 +111,17 @@ export function IntensiveTodos() {
           <div className="flex items-center gap-2 rounded-xl bg-sidebar-accent px-3 py-2">
             <Archive className="h-4 w-4 text-muted-foreground" />
             <span className="text-xs font-medium text-sidebar-foreground">
-              Archived Batches ({archivedBatches.length})
+              Completed & Batches ({totalSidebarCount})
             </span>
           </div>
         </div>
 
         <ScrollArea className="flex-1 p-3">
-          <ArchiveSidebar batches={archivedBatches} />
+          <ArchiveSidebar
+            completedItems={completedItems}
+            batches={archivedBatches}
+            onDeleteCompleted={deleteCompleted}
+          />
         </ScrollArea>
       </aside>
 
@@ -140,7 +145,7 @@ export function IntensiveTodos() {
               <div className="flex items-center gap-2 rounded-xl bg-muted px-3 py-2">
                 <Archive className="h-4 w-4 text-muted-foreground" />
                 <span className="text-xs font-medium">
-                  Archives ({archivedBatches.length})
+                  Completed & Batches ({totalSidebarCount})
                 </span>
               </div>
               <button
@@ -157,7 +162,11 @@ export function IntensiveTodos() {
           </div>
 
           <ScrollArea className="flex-1 h-[calc(100vh-140px)] p-3">
-            <ArchiveSidebar batches={archivedBatches} />
+            <ArchiveSidebar
+              completedItems={completedItems}
+              batches={archivedBatches}
+              onDeleteCompleted={deleteCompleted}
+            />
           </ScrollArea>
         </SheetContent>
       </Sheet>
@@ -169,7 +178,7 @@ export function IntensiveTodos() {
           <div>
             <h2 className="text-lg font-bold text-card-foreground">Active Tasks</h2>
             <p className="text-xs text-muted-foreground">
-              {activeTasks.length} active, {doneTasks.length} done
+              {activeTasks.length} active, {completedItems.length} completed
             </p>
           </div>
           {isEscalationZone && (
@@ -208,9 +217,7 @@ export function IntensiveTodos() {
         <div className="flex-1 flex flex-col min-h-0 md:hidden">
           {mobileTab === "active" ? (
             <MobileActiveView
-              tasks={tasks}
               activeTasks={activeTasks}
-              doneTasks={doneTasks}
               isEscalationZone={isEscalationZone}
               lastEscalated={lastEscalated}
               onToggle={toggleTask}
@@ -218,7 +225,11 @@ export function IntensiveTodos() {
               onAdd={addTask}
             />
           ) : (
-            <MobileArchiveView batches={archivedBatches} />
+            <MobileArchiveView
+              completedItems={completedItems}
+              batches={archivedBatches}
+              onDeleteCompleted={deleteCompleted}
+            />
           )}
         </div>
 
@@ -241,7 +252,7 @@ export function IntensiveTodos() {
 
             <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               <div className="flex flex-col gap-2 max-w-2xl mx-auto">
-                {activeTasks.length === 0 && doneTasks.length === 0 ? (
+                {activeTasks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
                     <ListTodo className="h-12 w-12 text-muted-foreground/30 mb-4" />
                     <p className="text-base font-medium text-muted-foreground">No tasks yet</p>
@@ -250,35 +261,14 @@ export function IntensiveTodos() {
                     </p>
                   </div>
                 ) : (
-                  <>
-                    {activeTasks.map((task) => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        onToggle={toggleTask}
-                        onDelete={deleteTask}
-                      />
-                    ))}
-                    {doneTasks.length > 0 && (
-                      <>
-                        <div className="flex items-center gap-2 pt-4 pb-2">
-                          <div className="h-px flex-1 bg-border" />
-                          <span className="text-xs text-muted-foreground px-2">
-                            Done ({doneTasks.length})
-                          </span>
-                          <div className="h-px flex-1 bg-border" />
-                        </div>
-                        {doneTasks.map((task) => (
-                          <TaskItem
-                            key={task.id}
-                            task={task}
-                            onToggle={toggleTask}
-                            onDelete={deleteTask}
-                          />
-                        ))}
-                      </>
-                    )}
-                  </>
+                  activeTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onToggle={toggleTask}
+                      onDelete={deleteTask}
+                    />
+                  ))
                 )}
               </div>
             </div>
@@ -322,9 +312,9 @@ export function IntensiveTodos() {
             )}
             <Archive className="h-5 w-5" />
             <span className="text-[10px] font-medium">Archive</span>
-            {archivedBatches.length > 0 && (
+            {totalSidebarCount > 0 && (
               <span className="absolute top-1.5 right-1/2 translate-x-4 h-4 min-w-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center px-1">
-                {archivedBatches.length}
+                {totalSidebarCount}
               </span>
             )}
           </button>
@@ -339,18 +329,14 @@ export function IntensiveTodos() {
 
 // Mobile Active View extracted for clarity
 function MobileActiveView({
-  tasks,
   activeTasks,
-  doneTasks,
   isEscalationZone,
   lastEscalated,
   onToggle,
   onDelete,
   onAdd,
 }: {
-  tasks: typeof useTodoStore extends () => infer R ? R["tasks"] : never
   activeTasks: { id: string; text: string; done: boolean; createdAt: number }[]
-  doneTasks: { id: string; text: string; done: boolean; createdAt: number }[]
   isEscalationZone: boolean
   lastEscalated: boolean
   onToggle: (id: string) => void
@@ -375,7 +361,7 @@ function MobileActiveView({
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
         <div className="flex flex-col gap-2">
-          {activeTasks.length === 0 && doneTasks.length === 0 ? (
+          {activeTasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <ListTodo className="h-10 w-10 text-muted-foreground/30 mb-3" />
               <p className="text-base font-medium text-muted-foreground">No tasks yet</p>
@@ -384,35 +370,14 @@ function MobileActiveView({
               </p>
             </div>
           ) : (
-            <>
-              {activeTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onToggle={onToggle}
-                  onDelete={onDelete}
-                />
-              ))}
-              {doneTasks.length > 0 && (
-                <>
-                  <div className="flex items-center gap-2 pt-3 pb-1.5">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-xs text-muted-foreground px-2">
-                      Done ({doneTasks.length})
-                    </span>
-                    <div className="h-px flex-1 bg-border" />
-                  </div>
-                  {doneTasks.map((task) => (
-                    <TaskItem
-                      key={task.id}
-                      task={task}
-                      onToggle={onToggle}
-                      onDelete={onDelete}
-                    />
-                  ))}
-                </>
-              )}
-            </>
+            activeTasks.map((task) => (
+              <TaskItem
+                key={task.id}
+                task={task}
+                onToggle={onToggle}
+                onDelete={onDelete}
+              />
+            ))
           )}
         </div>
       </div>

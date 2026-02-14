@@ -16,8 +16,15 @@ export interface ArchivedBatch {
   archivedAt: number
 }
 
+export interface CompletedItem {
+  id: string
+  task: Task
+  completedAt: number
+}
+
 interface TodoState {
   tasks: Task[]
+  completedItems: CompletedItem[]
   archivedBatches: ArchivedBatch[]
   batchCounter: number
   lastRoll: number | null
@@ -27,6 +34,7 @@ interface TodoState {
   addTask: (text: string) => void
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
+  deleteCompleted: (id: string) => void
   resetDemo: () => void
   clearEscalationGlow: () => void
   clearRoll: () => void
@@ -40,6 +48,7 @@ export const useTodoStore = create<TodoState>()(
   persist(
     (set, get) => ({
       tasks: [],
+      completedItems: [],
       archivedBatches: [],
       batchCounter: 0,
       lastRoll: null,
@@ -94,31 +103,40 @@ export const useTodoStore = create<TodoState>()(
 
       toggleTask: (id: string) => {
         const state = get()
-        const updatedTasks = state.tasks.map((t) =>
-          t.id === id ? { ...t, done: !t.done } : t
-        )
+        const task = state.tasks.find((t) => t.id === id)
+        if (!task) return
 
-        // Check if 20 tasks are done
-        const doneTasks = updatedTasks.filter((t) => t.done)
-        if (doneTasks.length >= 20) {
+        // Remove from active tasks and move to completed sidebar
+        const completedItem: CompletedItem = {
+          id: generateId(),
+          task: { ...task, done: true },
+          completedAt: Date.now(),
+        }
+
+        const newCompleted = [completedItem, ...state.completedItems]
+        const remainingTasks = state.tasks.filter((t) => t.id !== id)
+
+        // Auto-batch: every 20 completed items, archive them as a batch
+        if (newCompleted.length >= 20) {
           const batchNumber = state.batchCounter + 1
           const batch: ArchivedBatch = {
             id: generateId(),
             type: "done",
             batchNumber,
-            tasks: doneTasks.slice(0, 20),
+            tasks: newCompleted.slice(0, 20).map((c) => c.task),
             archivedAt: Date.now(),
           }
-          const doneIds = new Set(doneTasks.slice(0, 20).map((t) => t.id))
-          const remainingTasks = updatedTasks.filter((t) => !doneIds.has(t.id))
-
           set({
             tasks: remainingTasks,
+            completedItems: newCompleted.slice(20),
             archivedBatches: [batch, ...state.archivedBatches],
             batchCounter: batchNumber,
           })
         } else {
-          set({ tasks: updatedTasks })
+          set({
+            tasks: remainingTasks,
+            completedItems: newCompleted,
+          })
         }
       },
 
@@ -126,9 +144,14 @@ export const useTodoStore = create<TodoState>()(
         set({ tasks: get().tasks.filter((t) => t.id !== id) })
       },
 
+      deleteCompleted: (id: string) => {
+        set({ completedItems: get().completedItems.filter((c) => c.id !== id) })
+      },
+
       resetDemo: () => {
         set({
           tasks: [],
+          completedItems: [],
           archivedBatches: [],
           batchCounter: 0,
           lastRoll: null,
