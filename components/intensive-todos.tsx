@@ -116,13 +116,13 @@ export function IntensiveTodos() {
           </div>
         </div>
 
-        <ScrollArea className="flex-1 p-3">
+        <div className="flex-1 overflow-y-auto p-3">
           <ArchiveSidebar
             completedItems={completedItems}
             batches={archivedBatches}
             onDeleteCompleted={deleteCompleted}
           />
-        </ScrollArea>
+        </div>
       </aside>
 
       {/* Mobile Sheet Sidebar */}
@@ -161,13 +161,13 @@ export function IntensiveTodos() {
             </div>
           </div>
 
-          <ScrollArea className="flex-1 h-[calc(100vh-140px)] p-3">
+          <div className="flex-1 overflow-y-auto h-[calc(100vh-140px)] p-3">
             <ArchiveSidebar
               completedItems={completedItems}
               batches={archivedBatches}
               onDeleteCompleted={deleteCompleted}
             />
-          </ScrollArea>
+          </div>
         </SheetContent>
       </Sheet>
 
