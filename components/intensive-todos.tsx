@@ -205,7 +205,7 @@ export function IntensiveTodos() {
         </header>
 
         {/* Mobile Tab Content */}
-        <div className="flex-1 flex flex-col overflow-hidden md:hidden">
+        <div className="flex-1 flex flex-col min-h-0 md:hidden">
           {mobileTab === "active" ? (
             <MobileActiveView
               tasks={tasks}
@@ -223,15 +223,15 @@ export function IntensiveTodos() {
         </div>
 
         {/* Desktop Canvas */}
-        <div className="hidden md:flex flex-1 flex-col overflow-hidden">
+        <div className="hidden md:flex flex-1 flex-col min-h-0">
           <div
             className={cn(
-              "flex-1 flex flex-col transition-colors duration-500",
+              "flex-1 flex flex-col min-h-0 transition-colors duration-500",
               isEscalationZone && "bg-escalation-bg"
             )}
           >
             {isEscalationZone && (
-              <div className="px-6 pt-4">
+              <div className="px-6 pt-4 shrink-0">
                 <EscalationBanner
                   activeCount={activeTasks.length}
                   isEscalated={lastEscalated}
@@ -239,7 +239,7 @@ export function IntensiveTodos() {
               </div>
             )}
 
-            <ScrollArea className="flex-1 px-6 py-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               <div className="flex flex-col gap-2 max-w-2xl mx-auto">
                 {activeTasks.length === 0 && doneTasks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -281,9 +281,9 @@ export function IntensiveTodos() {
                   </>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
-            <div className="px-6 py-4 border-t bg-card">
+            <div className="shrink-0 px-6 py-4 border-t bg-card">
               <div className="max-w-2xl mx-auto">
                 <TaskInput onAdd={addTask} isEscalation={isEscalationZone} />
               </div>
@@ -360,12 +360,12 @@ function MobileActiveView({
   return (
     <div
       className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-colors duration-500",
+        "flex-1 flex flex-col min-h-0 transition-colors duration-500",
         isEscalationZone && "bg-escalation-bg"
       )}
     >
       {isEscalationZone && (
-        <div className="px-4 pt-3">
+        <div className="px-4 pt-3 shrink-0">
           <EscalationBanner
             activeCount={activeTasks.length}
             isEscalated={lastEscalated}
@@ -373,7 +373,7 @@ function MobileActiveView({
         </div>
       )}
 
-      <ScrollArea className="flex-1 px-4 py-3">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
         <div className="flex flex-col gap-2">
           {activeTasks.length === 0 && doneTasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -415,9 +415,9 @@ function MobileActiveView({
             </>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
-      <div className="px-4 py-3 border-t bg-card">
+      <div className="shrink-0 px-4 py-3 border-t bg-card">
         <TaskInput onAdd={onAdd} isEscalation={isEscalationZone} />
       </div>
     </div>
