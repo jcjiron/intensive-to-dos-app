@@ -28,7 +28,7 @@ export function TaskInput({ onAdd, isEscalation }: TaskInputProps) {
       <div
         className={cn(
           "flex-1 flex items-center gap-2 rounded-2xl border bg-card px-3 py-2.5 md:px-4 md:py-3 transition-colors duration-200",
-          isEscalation && "border-escalation/40 bg-escalation-bg/50 opacity-50"
+          isEscalation && "border-escalation/40 bg-escalation-bg/50 opacity-50 cursor-not-allowed"
         )}
       >
         <Plus className="h-4 w-4 shrink-0 text-muted-foreground" />
