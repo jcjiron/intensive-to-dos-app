@@ -5,7 +5,6 @@ import { useTodoStore } from "@/lib/store"
 import { TaskItem } from "@/components/task-item"
 import { TaskInput } from "@/components/task-input"
 import { ArchiveSidebar, MobileArchiveView } from "@/components/archive-sidebar"
-import { RollToast } from "@/components/roll-toast"
 import {
   Sheet,
   SheetContent,
@@ -27,16 +26,11 @@ export function IntensiveTodos() {
     tasks,
     completedItems,
     archivedBatches,
-    lastRoll,
-    lastEscalated,
-    showEscalationGlow,
     addTask,
     toggleTask,
     deleteTask,
     deleteCompleted,
     resetDemo,
-    clearEscalationGlow,
-    clearRoll,
   } = useTodoStore()
 
   const [mounted, setMounted] = useState(false)
@@ -47,16 +41,7 @@ export function IntensiveTodos() {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (showEscalationGlow) {
-      const timer = setTimeout(clearEscalationGlow, 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [showEscalationGlow, clearEscalationGlow])
 
-  const handleClearRoll = useCallback(() => {
-    clearRoll()
-  }, [clearRoll])
 
   if (!mounted) {
     return (
@@ -76,12 +61,7 @@ export function IntensiveTodos() {
   const totalSidebarCount = completedItems.length + archivedBatches.length
 
   return (
-    <div
-      className={cn(
-        "flex h-screen overflow-hidden bg-background transition-all duration-300",
-        showEscalationGlow && "animate-escalation-glow"
-      )}
-    >
+    <div className="flex h-screen overflow-hidden bg-background transition-all duration-300">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-72 shrink-0 flex-col border-r bg-sidebar">
         <div className="flex items-center justify-between p-4 border-b">
@@ -218,7 +198,6 @@ export function IntensiveTodos() {
             <MobileActiveView
               activeTasks={activeTasks}
               isEscalationZone={isEscalationZone}
-              lastEscalated={lastEscalated}
               onToggle={toggleTask}
               onDelete={deleteTask}
               onAdd={addTask}
@@ -311,8 +290,6 @@ export function IntensiveTodos() {
         </nav>
       </main>
 
-      {/* Roll Toast */}
-      <RollToast roll={lastRoll} escalated={lastEscalated} onDismiss={handleClearRoll} />
     </div>
   )
 }
@@ -321,14 +298,12 @@ export function IntensiveTodos() {
 function MobileActiveView({
   activeTasks,
   isEscalationZone,
-  lastEscalated,
   onToggle,
   onDelete,
   onAdd,
 }: {
   activeTasks: { id: string; text: string; done: boolean; createdAt: number }[]
   isEscalationZone: boolean
-  lastEscalated: boolean
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onAdd: (text: string) => void
