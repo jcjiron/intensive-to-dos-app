@@ -130,7 +130,7 @@ export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, cla
                 <div
                   key={batch.id}
                   className={cn(
-                    "group flex items-center gap-3 rounded-2xl border p-3 transition-all duration-200 hover:shadow-sm w-full",
+                    "group flex items-center gap-2 rounded-2xl border p-3 transition-all duration-200 hover:shadow-sm w-full",
                     batch.type === "done"
                       ? "bg-success/5 border-success/20 hover:bg-success/10"
                       : "bg-escalation/5 border-escalation/20 hover:bg-escalation/10"
@@ -166,18 +166,25 @@ export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, cla
                           : batch.tasks[0]?.text.slice(0, 30)}
                       </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0 group-hover:text-muted-foreground transition-colors" />
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
                       downloadBatchAsCSV(batch)
                     }}
-                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
+                    className="shrink-0 p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
                     aria-label="Download batch as CSV"
                     title="Download as CSV"
                   >
                     <Download className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setSelectedBatch(batch)}
+                    className="shrink-0 p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="View batch details"
+                    title="View details"
+                  >
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               ))}
