@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Archive, AlertTriangle, ChevronRight, X, CheckCircle2, Trash2 } from "lucide-react"
+import { Archive, AlertTriangle, ChevronRight, X, CheckCircle2, Trash2, Download } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -12,6 +12,32 @@ import {
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { ArchivedBatch, CompletedItem } from "@/lib/store"
+
+function downloadBatchAsCSV(batch: ArchivedBatch) {
+  const headers = ["Task", "Status", "Created At"]
+  const rows = batch.tasks.map((task) => [
+    `"${task.text.replace(/"/g, '""')}"`,
+    batch.type === "done" ? "Completed" : "Escalated",
+    new Date(task.createdAt).toLocaleString(),
+  ])
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) => row.join(",")),
+  ].join("\n")
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  const link = document.createElement("a")
+  const url = URL.createObjectURL(blob)
+  const filename = `batch-${batch.type === "done" ? `done-${batch.batchNumber}` : "escalated"}-${Date.now()}.csv`
+
+  link.setAttribute("href", url)
+  link.setAttribute("download", filename)
+  link.style.visibility = "hidden"
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 
 interface ArchiveSidebarProps {
   completedItems: CompletedItem[]
@@ -101,44 +127,66 @@ export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, cla
             )}
             <div className="flex flex-col gap-2">
               {batches.map((batch) => (
-                <button
+                <div
                   key={batch.id}
-                  onClick={() => setSelectedBatch(batch)}
                   className={cn(
-                    "group flex items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-200 hover:shadow-sm w-full",
+                    "group flex items-center gap-2 rounded-2xl border p-3 transition-all duration-200 hover:shadow-sm w-full",
                     batch.type === "done"
                       ? "bg-success/5 border-success/20 hover:bg-success/10"
                       : "bg-escalation/5 border-escalation/20 hover:bg-escalation/10"
                   )}
                 >
-                  <div
-                    className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
-                      batch.type === "done"
-                        ? "bg-success/15 text-success"
-                        : "bg-escalation/15 text-escalation"
-                    )}
+                  <button
+                    onClick={() => setSelectedBatch(batch)}
+                    className="flex-1 flex items-center gap-3 text-left"
                   >
-                    {batch.type === "done" ? (
-                      <Archive className="h-4 w-4" />
-                    ) : (
-                      <AlertTriangle className="h-4 w-4" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {batch.type === "done"
-                        ? `Batch #${batch.batchNumber}`
-                        : "Escalated"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {batch.type === "done"
-                        ? `${batch.tasks.length} tasks`
-                        : batch.tasks[0]?.text.slice(0, 30)}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0 group-hover:text-muted-foreground transition-colors" />
-                </button>
+                    <div
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+                        batch.type === "done"
+                          ? "bg-success/15 text-success"
+                          : "bg-escalation/15 text-escalation"
+                      )}
+                    >
+                      {batch.type === "done" ? (
+                        <Archive className="h-4 w-4" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {batch.type === "done"
+                          ? `Batch #${batch.batchNumber}`
+                          : "Escalated"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {batch.type === "done"
+                          ? `${batch.tasks.length} tasks`
+                          : batch.tasks[0]?.text.slice(0, 30)}
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      downloadBatchAsCSV(batch)
+                    }}
+                    className="shrink-0 p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Download batch as CSV"
+                    title="Download as CSV"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setSelectedBatch(batch)}
+                    className="shrink-0 p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="View batch details"
+                    title="View details"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
               ))}
             </div>
           </div>

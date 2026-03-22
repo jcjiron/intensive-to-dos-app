@@ -5,8 +5,6 @@ import { useTodoStore } from "@/lib/store"
 import { TaskItem } from "@/components/task-item"
 import { TaskInput } from "@/components/task-input"
 import { ArchiveSidebar, MobileArchiveView } from "@/components/archive-sidebar"
-import { EscalationBanner } from "@/components/escalation-banner"
-import { RollToast } from "@/components/roll-toast"
 import {
   Sheet,
   SheetContent,
@@ -28,16 +26,11 @@ export function IntensiveTodos() {
     tasks,
     completedItems,
     archivedBatches,
-    lastRoll,
-    lastEscalated,
-    showEscalationGlow,
     addTask,
     toggleTask,
     deleteTask,
     deleteCompleted,
     resetDemo,
-    clearEscalationGlow,
-    clearRoll,
   } = useTodoStore()
 
   const [mounted, setMounted] = useState(false)
@@ -48,16 +41,7 @@ export function IntensiveTodos() {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (showEscalationGlow) {
-      const timer = setTimeout(clearEscalationGlow, 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [showEscalationGlow, clearEscalationGlow])
 
-  const handleClearRoll = useCallback(() => {
-    clearRoll()
-  }, [clearRoll])
 
   if (!mounted) {
     return (
@@ -77,12 +61,7 @@ export function IntensiveTodos() {
   const totalSidebarCount = completedItems.length + archivedBatches.length
 
   return (
-    <div
-      className={cn(
-        "flex h-screen overflow-hidden bg-background transition-all duration-300",
-        showEscalationGlow && "animate-escalation-glow"
-      )}
-    >
+    <div className="flex h-screen overflow-hidden bg-background transition-all duration-300">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-72 shrink-0 flex-col border-r bg-sidebar">
         <div className="flex items-center justify-between p-4 border-b">
@@ -91,7 +70,6 @@ export function IntensiveTodos() {
               <Zap className="h-4 w-4 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-sidebar-foreground">Intensive To-Dos</h1>
               <p className="text-xs text-muted-foreground">
                 {activeTasks.length}/20 active
               </p>
@@ -105,15 +83,6 @@ export function IntensiveTodos() {
           >
             <RotateCcw className="h-4 w-4" />
           </button>
-        </div>
-
-        <div className="p-3 border-b">
-          <div className="flex items-center gap-2 rounded-xl bg-sidebar-accent px-3 py-2">
-            <Archive className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs font-medium text-sidebar-foreground">
-              Completed & Batches ({totalSidebarCount})
-            </span>
-          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3">
@@ -219,7 +188,6 @@ export function IntensiveTodos() {
             <MobileActiveView
               activeTasks={activeTasks}
               isEscalationZone={isEscalationZone}
-              lastEscalated={lastEscalated}
               onToggle={toggleTask}
               onDelete={deleteTask}
               onAdd={addTask}
@@ -241,15 +209,6 @@ export function IntensiveTodos() {
               isEscalationZone && "bg-escalation-bg"
             )}
           >
-            {isEscalationZone && (
-              <div className="px-6 pt-4 shrink-0">
-                <EscalationBanner
-                  activeCount={activeTasks.length}
-                  isEscalated={lastEscalated}
-                />
-              </div>
-            )}
-
             <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               <div className="flex flex-col gap-2 max-w-2xl mx-auto">
                 {activeTasks.length === 0 ? (
@@ -321,8 +280,6 @@ export function IntensiveTodos() {
         </nav>
       </main>
 
-      {/* Roll Toast */}
-      <RollToast roll={lastRoll} escalated={lastEscalated} onDismiss={handleClearRoll} />
     </div>
   )
 }
@@ -331,14 +288,12 @@ export function IntensiveTodos() {
 function MobileActiveView({
   activeTasks,
   isEscalationZone,
-  lastEscalated,
   onToggle,
   onDelete,
   onAdd,
 }: {
   activeTasks: { id: string; text: string; done: boolean; createdAt: number }[]
   isEscalationZone: boolean
-  lastEscalated: boolean
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onAdd: (text: string) => void
@@ -350,15 +305,6 @@ function MobileActiveView({
         isEscalationZone && "bg-escalation-bg"
       )}
     >
-      {isEscalationZone && (
-        <div className="px-4 pt-3 shrink-0">
-          <EscalationBanner
-            activeCount={activeTasks.length}
-            isEscalated={lastEscalated}
-          />
-        </div>
-      )}
-
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
         <div className="flex flex-col gap-2">
           {activeTasks.length === 0 ? (

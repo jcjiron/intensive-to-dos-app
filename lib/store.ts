@@ -27,17 +27,12 @@ interface TodoState {
   completedItems: CompletedItem[]
   archivedBatches: ArchivedBatch[]
   batchCounter: number
-  lastRoll: number | null
-  lastEscalated: boolean
-  showEscalationGlow: boolean
 
   addTask: (text: string) => void
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   deleteCompleted: (id: string) => void
   resetDemo: () => void
-  clearEscalationGlow: () => void
-  clearRoll: () => void
 }
 
 function generateId() {
@@ -51,15 +46,8 @@ export const useTodoStore = create<TodoState>()(
       completedItems: [],
       archivedBatches: [],
       batchCounter: 0,
-      lastRoll: null,
-      lastEscalated: false,
-      showEscalationGlow: false,
 
       addTask: (text: string) => {
-        const state = get()
-        const activeTasks = state.tasks.filter((t) => !t.done)
-        const isEscalationZone = activeTasks.length >= 20
-
         const newTask: Task = {
           id: generateId(),
           text,
@@ -67,38 +55,9 @@ export const useTodoStore = create<TodoState>()(
           createdAt: Date.now(),
         }
 
-        if (isEscalationZone) {
-          const roll = Math.floor(Math.random() * 5) + 1
-
-          if (roll === 1) {
-            // Escalated! Move to sidebar as orange block
-            const escalatedBatch: ArchivedBatch = {
-              id: generateId(),
-              type: "escalated",
-              tasks: [newTask],
-              archivedAt: Date.now(),
-            }
-            set({
-              archivedBatches: [escalatedBatch, ...state.archivedBatches],
-              lastRoll: roll,
-              lastEscalated: true,
-              showEscalationGlow: true,
-            })
-          } else {
-            // Task stays active
-            set({
-              tasks: [...state.tasks, newTask],
-              lastRoll: roll,
-              lastEscalated: false,
-            })
-          }
-        } else {
-          set({
-            tasks: [...state.tasks, newTask],
-            lastRoll: null,
-            lastEscalated: false,
-          })
-        }
+        set({
+          tasks: [...get().tasks, newTask],
+        })
       },
 
       toggleTask: (id: string) => {
@@ -154,18 +113,7 @@ export const useTodoStore = create<TodoState>()(
           completedItems: [],
           archivedBatches: [],
           batchCounter: 0,
-          lastRoll: null,
-          lastEscalated: false,
-          showEscalationGlow: false,
         })
-      },
-
-      clearEscalationGlow: () => {
-        set({ showEscalationGlow: false })
-      },
-
-      clearRoll: () => {
-        set({ lastRoll: null, lastEscalated: false })
       },
     }),
     {
