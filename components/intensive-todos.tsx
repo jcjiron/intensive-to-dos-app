@@ -70,7 +70,6 @@ export function IntensiveTodos() {
               <Zap className="h-4 w-4 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-sidebar-foreground">Intensive To-Dos</h1>
               <p className="text-xs text-muted-foreground">
                 {activeTasks.length}/20 active
               </p>
