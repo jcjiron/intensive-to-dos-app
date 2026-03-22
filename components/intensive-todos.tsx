@@ -86,15 +86,6 @@ export function IntensiveTodos() {
           </button>
         </div>
 
-        <div className="p-3 border-b">
-          <div className="flex items-center gap-2 rounded-xl bg-sidebar-accent px-3 py-2">
-            <Archive className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs font-medium text-sidebar-foreground">
-              Completed & Batches ({totalSidebarCount})
-            </span>
-          </div>
-        </div>
-
         <div className="flex-1 overflow-y-auto p-3">
           <ArchiveSidebar
             completedItems={completedItems}
