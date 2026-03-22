@@ -5,7 +5,6 @@ import { useTodoStore } from "@/lib/store"
 import { TaskItem } from "@/components/task-item"
 import { TaskInput } from "@/components/task-input"
 import { ArchiveSidebar, MobileArchiveView } from "@/components/archive-sidebar"
-import { EscalationBanner } from "@/components/escalation-banner"
 import { RollToast } from "@/components/roll-toast"
 import {
   Sheet,
@@ -241,15 +240,6 @@ export function IntensiveTodos() {
               isEscalationZone && "bg-escalation-bg"
             )}
           >
-            {isEscalationZone && (
-              <div className="px-6 pt-4 shrink-0">
-                <EscalationBanner
-                  activeCount={activeTasks.length}
-                  isEscalated={lastEscalated}
-                />
-              </div>
-            )}
-
             <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               <div className="flex flex-col gap-2 max-w-2xl mx-auto">
                 {activeTasks.length === 0 ? (
@@ -350,15 +340,6 @@ function MobileActiveView({
         isEscalationZone && "bg-escalation-bg"
       )}
     >
-      {isEscalationZone && (
-        <div className="px-4 pt-3 shrink-0">
-          <EscalationBanner
-            activeCount={activeTasks.length}
-            isEscalated={lastEscalated}
-          />
-        </div>
-      )}
-
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
         <div className="flex flex-col gap-2">
           {activeTasks.length === 0 ? (
