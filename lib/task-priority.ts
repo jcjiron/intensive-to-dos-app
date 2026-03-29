@@ -9,24 +9,24 @@ export const PRIORITY_ORDER: Record<TaskPriority, number> = {
 
 export const PRIORITY_COLORS: Record<TaskPriority, { bg: string; border: string; text: string }> = {
   "urgent-important": {
-    bg: "bg-red-500",
-    border: "border-red-600",
-    text: "text-white",
+    bg: "bg-muted",
+    border: "border-border",
+    text: "text-foreground",
   },
   "important-not-urgent": {
-    bg: "bg-orange-500",
-    border: "border-orange-600",
-    text: "text-white",
+    bg: "bg-muted",
+    border: "border-border",
+    text: "text-foreground",
   },
   "urgent-not-important": {
-    bg: "bg-yellow-400",
-    border: "border-yellow-500",
-    text: "text-yellow-900",
+    bg: "bg-muted",
+    border: "border-border",
+    text: "text-foreground",
   },
   "not-urgent-not-important": {
-    bg: "bg-blue-500",
-    border: "border-blue-600",
-    text: "text-white",
+    bg: "bg-muted",
+    border: "border-border",
+    text: "text-foreground",
   },
 }
 
