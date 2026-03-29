@@ -314,7 +314,7 @@ export function IntensiveTodos() {
 
       {/* Mobile Task Detail Sheet */}
       <Sheet open={!!selectedTask && mounted} onOpenChange={(open) => !open && setSelectedTask(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0">
+        <SheetContent side="right" className="w-full sm:max-w-md p-0" hideOverlay hideCloseButton>
           {selectedTask && (
             <TaskDetailPanel
               task={selectedTask}
