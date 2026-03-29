@@ -130,100 +130,52 @@ export function TaskDetailPanel({
   }
 
   return (
-    <div className="w-full md:w-[384px] md:shrink-0 h-full md:border-l flex overflow-hidden">
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-card">
-        {/* Progress Bar */}
-        {totalCount > 0 && (
-          <div className="h-1.5 bg-muted">
-            <div
-              className="h-full bg-success transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        )}
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {totalCount > 0 && (
-              <span className="font-medium">
-                {completedCount}/{totalCount} completed
-              </span>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            aria-label="Close panel"
-          >
-            <X className="h-4 w-4" />
-          </button>
+    <div className="w-full md:w-[384px] md:shrink-0 h-full md:border-l flex flex-col overflow-hidden bg-card">
+      {/* Progress Bar */}
+      {totalCount > 0 && (
+        <div className="h-1.5 bg-muted">
+          <div
+            className="h-full bg-success transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
         </div>
+      )}
 
-        {/* Task Title */}
-        <div className="px-4 py-4 border-b">
-          {isEditingTitle ? (
-            <input
-              ref={titleInputRef}
-              type="text"
-              value={titleValue}
-              onChange={(e) => setTitleValue(e.target.value)}
-              onKeyDown={handleTitleKeyDown}
-              onBlur={handleTitleSave}
-              className="w-full text-lg font-semibold bg-transparent border-b-2 border-primary outline-none pb-1"
-            />
-          ) : (
-            <h2
-              onClick={handleTitleClick}
-              className="text-lg font-semibold text-foreground cursor-text hover:bg-muted/30 rounded px-2 py-1 -mx-2 -my-1 transition-colors"
-            >
-              {task.text}
-            </h2>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {totalCount > 0 && (
+            <span className="font-medium">
+              {completedCount}/{totalCount} completed
+            </span>
           )}
-        </div>
-
-        {/* Subtasks Section */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Subtasks:</h3>
-
-          {/* Add Subtask Input */}
-          <div className="flex items-center gap-2 mb-4">
-            <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-            <input
-              ref={subtaskInputRef}
-              type="text"
-              value={subtaskInput}
-              onChange={(e) => setSubtaskInput(e.target.value)}
-              onKeyDown={handleSubtaskKeyDown}
-              placeholder="Add New Subtask"
-              className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
-            />
-          </div>
-
-          {/* Subtask List */}
-          <div className="flex flex-col gap-1">
-            {childTasks.map((child) => (
-              <SubtaskItem
-                key={child.id}
-                task={child}
-                onToggle={() => onToggleChild(child.id)}
-                onDelete={() => onDeleteChild(child.id)}
-                onUpdate={(text) => onUpdateTask(child.id, text)}
-                showError={showError && !child.done}
-                isDragging={draggedId === child.id}
-                onDragStart={(e) => handleDragStart(e, child.id)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, child.id)}
-                onDragEnd={handleDragEnd}
-              />
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* Action Bar - Right Side */}
-      <div className="w-12 shrink-0 bg-muted/20 flex flex-col items-center py-3 gap-2 border-l border-border/50">
+      {/* Task Title */}
+      <div className="px-4 py-4 border-b">
+        {isEditingTitle ? (
+          <input
+            ref={titleInputRef}
+            type="text"
+            value={titleValue}
+            onChange={(e) => setTitleValue(e.target.value)}
+            onKeyDown={handleTitleKeyDown}
+            onBlur={handleTitleSave}
+            className="w-full text-lg font-semibold bg-transparent border-b-2 border-primary outline-none pb-1"
+          />
+        ) : (
+          <h2
+            onClick={handleTitleClick}
+            className="text-lg font-semibold text-foreground cursor-text hover:bg-muted/30 rounded px-2 py-1 -mx-2 -my-1 transition-colors"
+          >
+            {task.text}
+          </h2>
+        )}
+      </div>
+
+      {/* Action Buttons Row */}
+      <div className="flex items-center gap-1 px-4 py-2 border-b bg-muted/10">
         <ActionButton
           icon={<Star className="h-4 w-4" />}
           label="Favorite"
@@ -244,6 +196,44 @@ export function TaskDetailPanel({
           label="More options"
           onClick={() => {}}
         />
+      </div>
+
+      {/* Subtasks Section */}
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        <h3 className="text-sm font-semibold text-foreground mb-3">Subtasks:</h3>
+
+        {/* Add Subtask Input */}
+        <div className="flex items-center gap-2 mb-4">
+          <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+          <input
+            ref={subtaskInputRef}
+            type="text"
+            value={subtaskInput}
+            onChange={(e) => setSubtaskInput(e.target.value)}
+            onKeyDown={handleSubtaskKeyDown}
+            placeholder="Add New Subtask"
+            className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+
+        {/* Subtask List */}
+        <div className="flex flex-col gap-1">
+          {childTasks.map((child) => (
+            <SubtaskItem
+              key={child.id}
+              task={child}
+              onToggle={() => onToggleChild(child.id)}
+              onDelete={() => onDeleteChild(child.id)}
+              onUpdate={(text) => onUpdateTask(child.id, text)}
+              showError={showError && !child.done}
+              isDragging={draggedId === child.id}
+              onDragStart={(e) => handleDragStart(e, child.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, child.id)}
+              onDragEnd={handleDragEnd}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )
