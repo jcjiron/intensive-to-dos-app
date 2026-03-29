@@ -1,17 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { Archive, AlertTriangle, ChevronRight, X, CheckCircle2, Trash2, Download } from "lucide-react"
+import { Archive, AlertTriangle, ChevronRight, CheckCircle2, Trash2, Download } from "lucide-react"
 import { cn } from "@/lib/utils"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { ArchivedBatch, CompletedItem } from "@/lib/store"
+import type { ArchivedBatch, CompletedItem, Task } from "@/lib/store"
 
 function downloadBatchAsCSV(batch: ArchivedBatch) {
   const headers = ["Task", "Status", "Created At"]
@@ -43,11 +35,12 @@ interface ArchiveSidebarProps {
   completedItems: CompletedItem[]
   batches: ArchivedBatch[]
   onDeleteCompleted?: (id: string) => void
+  onSelectTask?: (taskId: string) => void
+  allTasks?: Task[]
   className?: string
 }
 
-export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, className }: ArchiveSidebarProps) {
-  const [selectedBatch, setSelectedBatch] = useState<ArchivedBatch | null>(null)
+export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, onSelectTask, allTasks, className }: ArchiveSidebarProps) {
 
   const isEmpty = completedItems.length === 0 && batches.length === 0
 
@@ -77,9 +70,10 @@ export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, cla
             </div>
             <div className="flex flex-col gap-1.5">
               {completedItems.map((item) => (
-                <div
+                <button
                   key={item.id}
-                  className="group flex items-center gap-2.5 rounded-xl border bg-success/5 border-success/15 p-2.5 transition-all duration-200"
+                  onClick={() => onSelectTask?.(item.task.id)}
+                  className="group flex items-center gap-2.5 rounded-xl border bg-success/5 border-success/15 p-2.5 transition-all duration-200 hover:shadow-sm w-full text-left"
                 >
                   <div className="h-5 w-5 rounded-md bg-success/15 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="h-3 w-3 text-success" />
@@ -89,14 +83,17 @@ export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, cla
                   </span>
                   {onDeleteCompleted && (
                     <button
-                      onClick={() => onDeleteCompleted(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteCompleted(item.id)
+                      }}
                       className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                       aria-label={`Remove completed task "${item.task.text}"`}
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
                   )}
-                </div>
+                </button>
               ))}
             </div>
             {/* Progress toward next batch */}
@@ -136,10 +133,7 @@ export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, cla
                       : "bg-escalation/5 border-escalation/20 hover:bg-escalation/10"
                   )}
                 >
-                  <button
-                    onClick={() => setSelectedBatch(batch)}
-                    className="flex-1 flex items-center gap-3 text-left"
-                  >
+                  <div className="flex-1 flex items-center gap-3 text-left">
                     <div
                       className={cn(
                         "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
@@ -166,7 +160,7 @@ export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, cla
                           : batch.tasks[0]?.text.slice(0, 30)}
                       </p>
                     </div>
-                  </button>
+                  </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
@@ -178,60 +172,12 @@ export function ArchiveSidebar({ completedItems, batches, onDeleteCompleted, cla
                   >
                     <Download className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => setSelectedBatch(batch)}
-                    className="shrink-0 p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="View batch details"
-                    title="View details"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
                 </div>
               ))}
             </div>
           </div>
         )}
       </div>
-
-      <Dialog open={!!selectedBatch} onOpenChange={() => setSelectedBatch(null)}>
-        <DialogContent className="max-w-md max-h-[80vh] rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedBatch?.type === "done" ? (
-                <>
-                  <div className="h-6 w-6 rounded-lg bg-success/15 flex items-center justify-center">
-                    <Archive className="h-3.5 w-3.5 text-success" />
-                  </div>
-                  Done Batch #{selectedBatch?.batchNumber}
-                </>
-              ) : (
-                <>
-                  <div className="h-6 w-6 rounded-lg bg-escalation/15 flex items-center justify-center">
-                    <AlertTriangle className="h-3.5 w-3.5 text-escalation" />
-                  </div>
-                  Escalated Item
-                </>
-              )}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedBatch && new Date(selectedBatch.archivedAt).toLocaleString()}
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="max-h-[50vh]">
-            <div className="flex flex-col gap-2 pr-4">
-              {selectedBatch?.tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-center gap-2 rounded-xl border bg-muted/50 p-3"
-                >
-                  <div className="h-2 w-2 rounded-full bg-muted-foreground/30 shrink-0" />
-                  <span className="text-sm text-foreground">{task.text}</span>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
@@ -241,62 +187,13 @@ export function MobileArchiveView({
   completedItems,
   batches,
   onDeleteCompleted,
+  onSelectTask,
 }: {
   completedItems: CompletedItem[]
   batches: ArchivedBatch[]
   onDeleteCompleted?: (id: string) => void
+  onSelectTask?: (taskId: string) => void
 }) {
-  const [selectedBatch, setSelectedBatch] = useState<ArchivedBatch | null>(null)
-
-  if (selectedBatch) {
-    return (
-      <div className="flex flex-col h-full animate-fade-in-up">
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center gap-2">
-            {selectedBatch.type === "done" ? (
-              <div className="h-8 w-8 rounded-xl bg-success/15 flex items-center justify-center">
-                <Archive className="h-4 w-4 text-success" />
-              </div>
-            ) : (
-              <div className="h-8 w-8 rounded-xl bg-escalation/15 flex items-center justify-center">
-                <AlertTriangle className="h-4 w-4 text-escalation" />
-              </div>
-            )}
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                {selectedBatch.type === "done"
-                  ? `Batch #${selectedBatch.batchNumber}`
-                  : "Escalated Item"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {new Date(selectedBatch.archivedAt).toLocaleString()}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setSelectedBatch(null)}
-            className="h-8 w-8 rounded-xl flex items-center justify-center hover:bg-muted transition-colors"
-            aria-label="Close batch details"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <ScrollArea className="flex-1 p-4">
-          <div className="flex flex-col gap-2">
-            {selectedBatch.tasks.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-center gap-3 rounded-2xl border bg-card p-4"
-              >
-                <div className="h-2 w-2 rounded-full bg-muted-foreground/30 shrink-0" />
-                <span className="text-sm text-card-foreground">{task.text}</span>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
-    )
-  }
 
   const isEmpty = completedItems.length === 0 && batches.length === 0
 
@@ -326,9 +223,10 @@ export function MobileArchiveView({
             </div>
             <div className="flex flex-col gap-2">
               {completedItems.map((item) => (
-                <div
+                <button
                   key={item.id}
-                  className="flex items-center gap-3 rounded-2xl border bg-success/5 border-success/15 p-3.5 transition-all"
+                  onClick={() => onSelectTask?.(item.task.id)}
+                  className="flex items-center gap-3 rounded-2xl border bg-success/5 border-success/15 p-3.5 transition-all hover:shadow-sm text-left w-full"
                 >
                   <div className="h-7 w-7 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="h-3.5 w-3.5 text-success" />
@@ -343,14 +241,17 @@ export function MobileArchiveView({
                   </div>
                   {onDeleteCompleted && (
                     <button
-                      onClick={() => onDeleteCompleted(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteCompleted(item.id)
+                      }}
                       className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                       aria-label={`Remove completed task "${item.task.text}"`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   )}
-                </div>
+                </button>
               ))}
             </div>
             {/* Progress bar */}
@@ -379,11 +280,10 @@ export function MobileArchiveView({
             </div>
             <div className="flex flex-col gap-3">
               {batches.map((batch) => (
-                <button
+                <div
                   key={batch.id}
-                  onClick={() => setSelectedBatch(batch)}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl border p-4 text-left transition-all duration-200 w-full active:scale-[0.98]",
+                    "flex items-center gap-3 rounded-2xl border p-4 text-left transition-all duration-200 w-full",
                     batch.type === "done"
                       ? "bg-success/5 border-success/20"
                       : "bg-escalation/5 border-escalation/20"
