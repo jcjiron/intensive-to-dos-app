@@ -166,21 +166,6 @@ export function TaskItem({
             >
               {task.text}
             </span>
-            
-            {/* Progress indicator for tasks with children */}
-            {hasChildren && (
-              <div className="flex items-center gap-2 mt-1.5">
-                <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden max-w-24">
-                  <div
-                    className="h-full bg-success transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {completedCount}/{childTasks.length}
-                </span>
-              </div>
-            )}
           </div>
 
           <button
