@@ -24,9 +24,9 @@ export const PRIORITY_COLORS: Record<TaskPriority, { bg: string; border: string;
     text: "text-yellow-700 dark:text-yellow-600",
   },
   "not-urgent-not-important": {
-    bg: "bg-slate-50 dark:bg-slate-900/20",
-    border: "border-slate-200 dark:border-slate-700",
-    text: "text-slate-600 dark:text-slate-400",
+    bg: "bg-blue-50 dark:bg-blue-950/30",
+    border: "border-blue-200 dark:border-blue-800",
+    text: "text-blue-600 dark:text-blue-400",
   },
 }
 

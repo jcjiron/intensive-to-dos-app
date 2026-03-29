@@ -248,7 +248,7 @@ function PriorityChip({ priority, onPriorityChange }: PriorityChipProps) {
         ref={buttonRef}
         onClick={handleButtonClick}
         className={cn(
-          "px-2 py-1 rounded border text-xs font-medium transition-colors shrink-0",
+          "w-10 py-1 rounded border text-xs font-medium transition-colors shrink-0 text-center",
           currentColors.bg,
           currentColors.border,
           currentColors.text
