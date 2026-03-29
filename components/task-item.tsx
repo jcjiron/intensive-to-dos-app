@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useCallback } from "react"
+import { useRef, useState, useCallback, useEffect } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Trash2, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -201,6 +201,8 @@ interface PriorityChipProps {
 
 function PriorityChip({ priority, onPriorityChange }: PriorityChipProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 })
   const priorities: TaskPriority[] = [
     "urgent-important",
     "important-not-urgent",
@@ -210,15 +212,41 @@ function PriorityChip({ priority, onPriorityChange }: PriorityChipProps) {
 
   const currentColors = PRIORITY_COLORS[priority]
 
-  const handlePrioritySelect = (newPriority: TaskPriority) => {
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      })
+    }
+    setIsOpen(!isOpen)
+  }
+
+  const handlePrioritySelect = (e: React.MouseEvent, newPriority: TaskPriority) => {
+    e.stopPropagation()
     onPriorityChange(newPriority)
     setIsOpen(false)
   }
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!isOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (buttonRef.current && !buttonRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("click", handleClickOutside)
+    return () => document.removeEventListener("click", handleClickOutside)
+  }, [isOpen])
+
   return (
-    <div className="relative">
+    <>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={buttonRef}
+        onClick={handleButtonClick}
         className={cn(
           "px-2 py-1 rounded border text-xs font-medium transition-colors shrink-0",
           currentColors.bg,
@@ -231,30 +259,42 @@ function PriorityChip({ priority, onPriorityChange }: PriorityChipProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 bg-card border rounded-lg shadow-md z-10 min-w-max">
+        <div 
+          className="fixed bg-card border rounded-lg shadow-lg z-50 min-w-max"
+          style={{ 
+            top: dropdownPosition.top, 
+            right: dropdownPosition.right,
+          }}
+        >
           {priorities.map((p) => {
             const colors = PRIORITY_COLORS[p]
             const isSelected = p === priority
             return (
               <button
                 key={p}
-                onClick={() => handlePrioritySelect(p)}
+                onClick={(e) => handlePrioritySelect(e, p)}
                 className={cn(
-                  "w-full px-3 py-2 text-xs text-left hover:bg-muted transition-colors",
-                  "border-b last:border-b-0",
-                  isSelected && "bg-muted font-semibold"
+                  "w-full px-3 py-2 text-xs text-left hover:bg-muted transition-colors flex items-center gap-2",
+                  "border-b last:border-b-0 first:rounded-t-lg last:rounded-b-lg",
+                  isSelected && "bg-muted"
                 )}
-                title={p}
               >
-                <span className={cn("font-medium", colors.text)}>
+                <span 
+                  className={cn(
+                    "w-3 h-3 rounded-full shrink-0",
+                    colors.bg,
+                    colors.border,
+                    "border"
+                  )} 
+                />
+                <span className={cn("font-medium", isSelected && "font-semibold")}>
                   {PRIORITY_LABELS[p]}
-                </span>{" "}
-                {p}
+                </span>
               </button>
             )
           })}
         </div>
       )}
-    </div>
+    </>
   )
 }
