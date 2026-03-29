@@ -29,6 +29,7 @@ interface TodoState {
   batchCounter: number
 
   addTask: (text: string) => void
+  updateTask: (id: string, text: string) => void
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   deleteCompleted: (id: string) => void
@@ -57,6 +58,14 @@ export const useTodoStore = create<TodoState>()(
 
         set({
           tasks: [...get().tasks, newTask],
+        })
+      },
+
+      updateTask: (id: string, text: string) => {
+        set({
+          tasks: get().tasks.map((t) =>
+            t.id === id ? { ...t, text } : t
+          ),
         })
       },
 

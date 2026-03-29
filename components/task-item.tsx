@@ -10,14 +10,18 @@ interface TaskItemProps {
   task: Task
   onToggle: (id: string) => void
   onDelete: (id: string) => void
+  onUpdate?: (id: string, text: string) => void
 }
 
-export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
+export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) {
   const [swiping, setSwiping] = useState(false)
   const [swipeX, setSwipeX] = useState(0)
   const [dismissed, setDismissed] = useState(false)
   const [dismissDirection, setDismissDirection] = useState<"left" | "right" | null>(null)
   const [justChecked, setJustChecked] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(task.text)
+  const inputRef = useRef<HTMLInputElement>(null)
   const startXRef = useRef(0)
   const startYRef = useRef(0)
   const isSwipingRef = useRef(false)
@@ -75,6 +79,32 @@ export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
     onToggle(task.id)
   }
 
+  const handleEditStart = () => {
+    setIsEditing(true)
+    setEditValue(task.text)
+    setTimeout(() => inputRef.current?.focus(), 0)
+  }
+
+  const handleEditSave = () => {
+    const trimmed = editValue.trim()
+    if (trimmed && trimmed !== task.text) {
+      onUpdate?.(task.id, trimmed)
+    }
+    setIsEditing(false)
+  }
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleEditSave()
+    } else if (e.key === "Escape") {
+      setIsEditing(false)
+    }
+  }
+
+  const handleEditBlur = () => {
+    setIsEditing(false)
+  }
+
   return (
     <div
       className={cn(
@@ -128,14 +158,27 @@ export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
           )}
           aria-label={`Mark "${task.text}" as ${task.done ? "not done" : "done"}`}
         />
-        <span
-          className={cn(
-            "flex-1 text-sm md:text-sm leading-relaxed text-card-foreground transition-all duration-200",
-            task.done && "line-through text-muted-foreground"
-          )}
-        >
-          {task.text}
-        </span>
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleEditKeyDown}
+            onBlur={handleEditBlur}
+            className="flex-1 text-sm md:text-sm px-2 py-1 rounded border bg-background text-foreground outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          />
+        ) : (
+          <span
+            onClick={handleEditStart}
+            className={cn(
+              "flex-1 text-sm md:text-sm leading-relaxed text-card-foreground transition-all duration-200 cursor-text hover:bg-muted/30 rounded px-2 py-1 -mx-2 -my-1",
+              task.done && "line-through text-muted-foreground"
+            )}
+          >
+            {task.text}
+          </span>
+        )}
         <button
           onClick={() => onDelete(task.id)}
           className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive hidden md:flex"

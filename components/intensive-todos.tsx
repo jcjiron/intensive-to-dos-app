@@ -27,6 +27,7 @@ export function IntensiveTodos() {
     completedItems,
     archivedBatches,
     addTask,
+    updateTask,
     toggleTask,
     deleteTask,
     deleteCompleted,
@@ -191,6 +192,7 @@ export function IntensiveTodos() {
               onToggle={toggleTask}
               onDelete={deleteTask}
               onAdd={addTask}
+              onUpdate={updateTask}
             />
           ) : (
             <MobileArchiveView
@@ -226,6 +228,7 @@ export function IntensiveTodos() {
                       task={task}
                       onToggle={toggleTask}
                       onDelete={deleteTask}
+                      onUpdate={updateTask}
                     />
                   ))
                 )}
@@ -291,12 +294,14 @@ function MobileActiveView({
   onToggle,
   onDelete,
   onAdd,
+  onUpdate,
 }: {
   activeTasks: { id: string; text: string; done: boolean; createdAt: number }[]
   isEscalationZone: boolean
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onAdd: (text: string) => void
+  onUpdate: (id: string, text: string) => void
 }) {
   return (
     <div
@@ -322,6 +327,7 @@ function MobileActiveView({
                 task={task}
                 onToggle={onToggle}
                 onDelete={onDelete}
+                onUpdate={onUpdate}
               />
             ))
           )}
