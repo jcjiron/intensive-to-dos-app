@@ -130,9 +130,9 @@ export function TaskDetailPanel({
   }
 
   return (
-    <div className="w-full md:w-96 h-full md:border-l bg-card flex">
+    <div className="w-full md:w-[384px] md:shrink-0 h-full md:border-l flex overflow-hidden">
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-card">
         {/* Progress Bar */}
         {totalCount > 0 && (
           <div className="h-1.5 bg-muted">
@@ -223,7 +223,7 @@ export function TaskDetailPanel({
       </div>
 
       {/* Action Bar - Right Side */}
-      <div className="w-12 border-l bg-muted/30 flex flex-col items-center py-3 gap-2">
+      <div className="w-12 shrink-0 bg-muted/20 flex flex-col items-center py-3 gap-2 border-l border-border/50">
         <ActionButton
           icon={<Star className="h-4 w-4" />}
           label="Favorite"
