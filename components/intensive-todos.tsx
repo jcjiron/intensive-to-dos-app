@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { useTodoStore } from "@/lib/store"
 import { TaskItem } from "@/components/task-item"
 import { TaskInput } from "@/components/task-input"
+import { TaskDetailPanel } from "@/components/task-detail-panel"
 import { ArchiveSidebar, MobileArchiveView } from "@/components/archive-sidebar"
 import {
   Sheet,
@@ -27,12 +28,16 @@ export function IntensiveTodos() {
     completedItems,
     archivedBatches,
     taskWithError,
+    selectedTaskId,
     addTask,
     addChildTask,
     updateTask,
     toggleTask,
+    toggleChildTask,
+    reorderChildren,
     deleteTask,
     deleteCompleted,
+    setSelectedTask,
     resetDemo,
   } = useTodoStore()
 
@@ -43,8 +48,6 @@ export function IntensiveTodos() {
   useEffect(() => {
     setMounted(true)
   }, [])
-
-
 
   if (!mounted) {
     return (
@@ -65,9 +68,14 @@ export function IntensiveTodos() {
   const isEscalationZone = parentTasks.length >= 20
   const totalSidebarCount = completedItems.length + archivedBatches.length
 
+  // Get selected task
+  const selectedTask = selectedTaskId 
+    ? tasks.find((t) => t.id === selectedTaskId) 
+    : null
+
   return (
     <div className="flex h-screen overflow-hidden bg-background transition-all duration-300">
-      {/* Desktop Sidebar */}
+      {/* Desktop Left Sidebar - Archive */}
       <aside className="hidden md:flex w-72 shrink-0 flex-col border-r bg-sidebar">
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-2">
@@ -197,9 +205,7 @@ export function IntensiveTodos() {
               onToggle={toggleTask}
               onDelete={deleteTask}
               onAdd={addTask}
-              onUpdate={updateTask}
-              onAddChild={addChildTask}
-              taskWithError={taskWithError}
+              onSelect={setSelectedTask}
             />
           ) : (
             <MobileArchiveView
@@ -211,7 +217,7 @@ export function IntensiveTodos() {
         </div>
 
         {/* Desktop Canvas */}
-        <div className="hidden md:flex flex-1 flex-col min-h-0">
+        <div className="hidden md:flex flex-1 min-h-0">
           <div
             className={cn(
               "flex-1 flex flex-col min-h-0 transition-colors duration-500",
@@ -236,9 +242,7 @@ export function IntensiveTodos() {
                       allTasks={tasks}
                       onToggle={toggleTask}
                       onDelete={deleteTask}
-                      onUpdate={updateTask}
-                      onAddChild={addChildTask}
-                      taskWithError={taskWithError}
+                      onSelect={setSelectedTask}
                     />
                   ))
                 )}
@@ -251,6 +255,21 @@ export function IntensiveTodos() {
               </div>
             </div>
           </div>
+
+          {/* Desktop Right Sidebar - Task Detail Panel */}
+          {selectedTask && (
+            <TaskDetailPanel
+              task={selectedTask}
+              allTasks={tasks}
+              onClose={() => setSelectedTask(null)}
+              onUpdateTask={updateTask}
+              onAddChild={addChildTask}
+              onToggleChild={toggleChildTask}
+              onDeleteChild={deleteTask}
+              onReorderChildren={reorderChildren}
+              showError={taskWithError === selectedTask.id}
+            />
+          )}
         </div>
 
         {/* Mobile Bottom Nav */}
@@ -293,6 +312,24 @@ export function IntensiveTodos() {
         </nav>
       </main>
 
+      {/* Mobile Task Detail Sheet */}
+      <Sheet open={!!selectedTask && mounted} onOpenChange={(open) => !open && setSelectedTask(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0">
+          {selectedTask && (
+            <TaskDetailPanel
+              task={selectedTask}
+              allTasks={tasks}
+              onClose={() => setSelectedTask(null)}
+              onUpdateTask={updateTask}
+              onAddChild={addChildTask}
+              onToggleChild={toggleChildTask}
+              onDeleteChild={deleteTask}
+              onReorderChildren={reorderChildren}
+              showError={taskWithError === selectedTask.id}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
@@ -305,9 +342,7 @@ function MobileActiveView({
   onToggle,
   onDelete,
   onAdd,
-  onUpdate,
-  onAddChild,
-  taskWithError,
+  onSelect,
 }: {
   parentTasks: { id: string; text: string; done: boolean; createdAt: number; parentId?: string; childIds?: string[] }[]
   allTasks: { id: string; text: string; done: boolean; createdAt: number; parentId?: string; childIds?: string[] }[]
@@ -315,9 +350,7 @@ function MobileActiveView({
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onAdd: (text: string) => void
-  onUpdate: (id: string, text: string) => void
-  onAddChild: (parentId: string, text: string) => void
-  taskWithError: string | null
+  onSelect: (id: string) => void
 }) {
   return (
     <div
@@ -344,9 +377,7 @@ function MobileActiveView({
                 allTasks={allTasks}
                 onToggle={onToggle}
                 onDelete={onDelete}
-                onUpdate={onUpdate}
-                onAddChild={onAddChild}
-                taskWithError={taskWithError}
+                onSelect={onSelect}
               />
             ))
           )}

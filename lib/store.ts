@@ -30,15 +30,19 @@ interface TodoState {
   archivedBatches: ArchivedBatch[]
   batchCounter: number
   taskWithError: string | null
+  selectedTaskId: string | null
 
   addTask: (text: string) => void
   addChildTask: (parentId: string, text: string) => void
   updateTask: (id: string, text: string) => void
   toggleTask: (id: string) => boolean
+  toggleChildTask: (id: string) => void
+  reorderChildren: (parentId: string, childIds: string[]) => void
   deleteTask: (id: string) => void
   deleteCompleted: (id: string) => void
   canCompleteTask: (id: string) => boolean
   setTaskError: (id: string | null) => void
+  setSelectedTask: (id: string | null) => void
   resetDemo: () => void
 }
 
@@ -54,6 +58,7 @@ export const useTodoStore = create<TodoState>()(
       archivedBatches: [],
       batchCounter: 0,
       taskWithError: null,
+      selectedTaskId: null,
 
       addTask: (text: string) => {
         const newTask: Task = {
@@ -111,8 +116,8 @@ export const useTodoStore = create<TodoState>()(
         })
 
         if (incompleteChildren.length > 0) {
-          // Set error state on parent to highlight children
-          set({ taskWithError: id })
+          // Open panel and show error state on incomplete children
+          set({ taskWithError: id, selectedTaskId: id })
           setTimeout(() => set({ taskWithError: null }), 2000)
           return false
         }
@@ -157,6 +162,22 @@ export const useTodoStore = create<TodoState>()(
         return true
       },
 
+      toggleChildTask: (id: string) => {
+        set({
+          tasks: get().tasks.map((t) =>
+            t.id === id ? { ...t, done: !t.done } : t
+          ),
+        })
+      },
+
+      reorderChildren: (parentId: string, childIds: string[]) => {
+        set({
+          tasks: get().tasks.map((t) =>
+            t.id === parentId ? { ...t, childIds } : t
+          ),
+        })
+      },
+
       deleteTask: (id: string) => {
         const state = get()
         const task = state.tasks.find((t) => t.id === id)
@@ -199,6 +220,10 @@ export const useTodoStore = create<TodoState>()(
         set({ taskWithError: id })
       },
 
+      setSelectedTask: (id: string | null) => {
+        set({ selectedTaskId: id })
+      },
+
       resetDemo: () => {
         set({
           tasks: [],
@@ -206,6 +231,7 @@ export const useTodoStore = create<TodoState>()(
           archivedBatches: [],
           batchCounter: 0,
           taskWithError: null,
+          selectedTaskId: null,
         })
       },
     }),
