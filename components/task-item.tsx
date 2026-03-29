@@ -137,7 +137,14 @@ export function TaskItem({
         <div
           onClick={handleCardClick}
           className={cn(
-            "relative flex items-center gap-3 rounded-2xl border bg-card p-3 md:p-4 transition-all duration-200 cursor-pointer hover:shadow-sm hover:border-primary/20",
+            "relative flex items-center gap-3 rounded-2xl border p-3 md:p-4 transition-all duration-200 cursor-pointer hover:shadow-sm",
+            // Priority-based colors for parent tasks
+            !task.parentId && task.priority === "urgent-important" && "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800 hover:border-red-300",
+            !task.parentId && task.priority === "important-not-urgent" && "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800 hover:border-orange-300",
+            !task.parentId && task.priority === "urgent-not-important" && "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800 hover:border-yellow-300",
+            !task.parentId && task.priority === "not-urgent-not-important" && "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 hover:border-blue-300",
+            !task.parentId && !task.priority && "bg-card hover:border-primary/20 border-border",
+            task.parentId && "bg-card hover:border-primary/20 border-border",
             task.done && "opacity-60",
             justChecked && "scale-[0.98]",
             !swiping && "transition-transform"
