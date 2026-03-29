@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { useTodoStore } from "@/lib/store"
+import { getPrioritySortKey } from "@/lib/task-priority"
 import { TaskItem } from "@/components/task-item"
 import { TaskInput } from "@/components/task-input"
+import { TaskDetailPanel } from "@/components/task-detail-panel"
 import { ArchiveSidebar, MobileArchiveView } from "@/components/archive-sidebar"
 import {
   Sheet,
@@ -20,16 +22,25 @@ import {
   Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { TaskPriority } from "@/lib/store"
 
 export function IntensiveTodos() {
   const {
     tasks,
     completedItems,
     archivedBatches,
+    taskWithError,
+    selectedTaskId,
     addTask,
+    addChildTask,
+    updateTask,
+    updateTaskPriority,
     toggleTask,
+    toggleChildTask,
+    reorderChildren,
     deleteTask,
     deleteCompleted,
+    setSelectedTask,
     resetDemo,
   } = useTodoStore()
 
@@ -40,8 +51,6 @@ export function IntensiveTodos() {
   useEffect(() => {
     setMounted(true)
   }, [])
-
-
 
   if (!mounted) {
     return (
@@ -56,13 +65,22 @@ export function IntensiveTodos() {
     )
   }
 
+  // Only show parent tasks (non-child tasks) in the main list, sorted by priority
+  const parentTasks = tasks
+    .filter((t) => !t.done && !t.parentId)
+    .sort((a, b) => getPrioritySortKey(a.priority) - getPrioritySortKey(b.priority))
   const activeTasks = tasks.filter((t) => !t.done)
-  const isEscalationZone = activeTasks.length >= 20
+  const isEscalationZone = parentTasks.length >= 20
   const totalSidebarCount = completedItems.length + archivedBatches.length
+
+  // Get selected task
+  const selectedTask = selectedTaskId 
+    ? tasks.find((t) => t.id === selectedTaskId) 
+    : null
 
   return (
     <div className="flex h-screen overflow-hidden bg-background transition-all duration-300">
-      {/* Desktop Sidebar */}
+      {/* Desktop Left Sidebar - Archive */}
       <aside className="hidden md:flex w-72 shrink-0 flex-col border-r bg-sidebar">
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-2">
@@ -71,7 +89,7 @@ export function IntensiveTodos() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">
-                {activeTasks.length}/20 active
+                {parentTasks.length}/20 active
               </p>
             </div>
           </div>
@@ -186,11 +204,14 @@ export function IntensiveTodos() {
         <div className="flex-1 flex flex-col min-h-0 md:hidden">
           {mobileTab === "active" ? (
             <MobileActiveView
-              activeTasks={activeTasks}
+              parentTasks={parentTasks}
+              allTasks={tasks}
               isEscalationZone={isEscalationZone}
               onToggle={toggleTask}
               onDelete={deleteTask}
               onAdd={addTask}
+              onSelect={setSelectedTask}
+              onPriorityChange={updateTaskPriority}
             />
           ) : (
             <MobileArchiveView
@@ -202,7 +223,7 @@ export function IntensiveTodos() {
         </div>
 
         {/* Desktop Canvas */}
-        <div className="hidden md:flex flex-1 flex-col min-h-0">
+        <div className="hidden md:flex flex-1 min-h-0">
           <div
             className={cn(
               "flex-1 flex flex-col min-h-0 transition-colors duration-500",
@@ -211,7 +232,7 @@ export function IntensiveTodos() {
           >
             <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               <div className="flex flex-col gap-2 max-w-2xl mx-auto">
-                {activeTasks.length === 0 ? (
+                {parentTasks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
                     <ListTodo className="h-12 w-12 text-muted-foreground/30 mb-4" />
                     <p className="text-base font-medium text-muted-foreground">No tasks yet</p>
@@ -220,12 +241,15 @@ export function IntensiveTodos() {
                     </p>
                   </div>
                 ) : (
-                  activeTasks.map((task) => (
+                  parentTasks.map((task) => (
                     <TaskItem
                       key={task.id}
                       task={task}
+                      allTasks={tasks}
                       onToggle={toggleTask}
                       onDelete={deleteTask}
+                      onSelect={setSelectedTask}
+                      onPriorityChange={updateTaskPriority}
                     />
                   ))
                 )}
@@ -238,6 +262,21 @@ export function IntensiveTodos() {
               </div>
             </div>
           </div>
+
+          {/* Desktop Right Sidebar - Task Detail Panel */}
+          {selectedTask && (
+            <TaskDetailPanel
+              task={selectedTask}
+              allTasks={tasks}
+              onClose={() => setSelectedTask(null)}
+              onUpdateTask={updateTask}
+              onAddChild={addChildTask}
+              onToggleChild={toggleChildTask}
+              onDeleteChild={deleteTask}
+              onReorderChildren={reorderChildren}
+              showError={taskWithError === selectedTask.id}
+            />
+          )}
         </div>
 
         {/* Mobile Bottom Nav */}
@@ -280,23 +319,47 @@ export function IntensiveTodos() {
         </nav>
       </main>
 
+      {/* Mobile Task Detail Sheet */}
+      <Sheet open={!!selectedTask && mounted} onOpenChange={(open) => !open && setSelectedTask(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0" hideOverlay>
+          {selectedTask && (
+            <TaskDetailPanel
+              task={selectedTask}
+              allTasks={tasks}
+              onClose={() => setSelectedTask(null)}
+              onUpdateTask={updateTask}
+              onAddChild={addChildTask}
+              onToggleChild={toggleChildTask}
+              onDeleteChild={deleteTask}
+              onReorderChildren={reorderChildren}
+              showError={taskWithError === selectedTask.id}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
 
 // Mobile Active View extracted for clarity
 function MobileActiveView({
-  activeTasks,
+  parentTasks,
+  allTasks,
   isEscalationZone,
   onToggle,
   onDelete,
   onAdd,
+  onSelect,
+  onPriorityChange,
 }: {
-  activeTasks: { id: string; text: string; done: boolean; createdAt: number }[]
+  parentTasks: { id: string; text: string; done: boolean; createdAt: number; parentId?: string; childIds?: string[]; priority?: TaskPriority }[]
+  allTasks: { id: string; text: string; done: boolean; createdAt: number; parentId?: string; childIds?: string[]; priority?: TaskPriority }[]
   isEscalationZone: boolean
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onAdd: (text: string) => void
+  onSelect: (id: string) => void
+  onPriorityChange: (id: string, priority: TaskPriority) => void
 }) {
   return (
     <div
@@ -307,7 +370,7 @@ function MobileActiveView({
     >
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
         <div className="flex flex-col gap-2">
-          {activeTasks.length === 0 ? (
+          {parentTasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <ListTodo className="h-10 w-10 text-muted-foreground/30 mb-3" />
               <p className="text-base font-medium text-muted-foreground">No tasks yet</p>
@@ -316,12 +379,15 @@ function MobileActiveView({
               </p>
             </div>
           ) : (
-            activeTasks.map((task) => (
+            parentTasks.map((task) => (
               <TaskItem
                 key={task.id}
                 task={task}
+                allTasks={allTasks}
                 onToggle={onToggle}
                 onDelete={onDelete}
+                onSelect={onSelect}
+                onPriorityChange={onPriorityChange}
               />
             ))
           )}
