@@ -1,6 +1,8 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
+export type TaskPriority = "urgent-important" | "important-not-urgent" | "urgent-not-important" | "not-urgent-not-important"
+
 export interface Task {
   id: string
   text: string
@@ -8,6 +10,7 @@ export interface Task {
   createdAt: number
   parentId?: string
   childIds?: string[]
+  priority?: TaskPriority
 }
 
 export interface ArchivedBatch {
@@ -35,6 +38,7 @@ interface TodoState {
   addTask: (text: string) => void
   addChildTask: (parentId: string, text: string) => void
   updateTask: (id: string, text: string) => void
+  updateTaskPriority: (id: string, priority: TaskPriority) => void
   toggleTask: (id: string) => boolean
   toggleChildTask: (id: string) => void
   reorderChildren: (parentId: string, childIds: string[]) => void
@@ -99,6 +103,14 @@ export const useTodoStore = create<TodoState>()(
         set({
           tasks: get().tasks.map((t) =>
             t.id === id ? { ...t, text } : t
+          ),
+        })
+      },
+
+      updateTaskPriority: (id: string, priority: TaskPriority) => {
+        set({
+          tasks: get().tasks.map((t) =>
+            t.id === id ? { ...t, priority } : t
           ),
         })
       },

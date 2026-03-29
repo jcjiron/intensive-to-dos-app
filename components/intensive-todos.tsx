@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useTodoStore } from "@/lib/store"
+import { getPrioritySortKey } from "@/lib/task-priority"
 import { TaskItem } from "@/components/task-item"
 import { TaskInput } from "@/components/task-input"
 import { TaskDetailPanel } from "@/components/task-detail-panel"
@@ -21,6 +22,7 @@ import {
   Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { TaskPriority } from "@/lib/store"
 
 export function IntensiveTodos() {
   const {
@@ -32,6 +34,7 @@ export function IntensiveTodos() {
     addTask,
     addChildTask,
     updateTask,
+    updateTaskPriority,
     toggleTask,
     toggleChildTask,
     reorderChildren,
@@ -62,8 +65,10 @@ export function IntensiveTodos() {
     )
   }
 
-  // Only show parent tasks (non-child tasks) in the main list
-  const parentTasks = tasks.filter((t) => !t.done && !t.parentId)
+  // Only show parent tasks (non-child tasks) in the main list, sorted by priority
+  const parentTasks = tasks
+    .filter((t) => !t.done && !t.parentId)
+    .sort((a, b) => getPrioritySortKey(a.priority) - getPrioritySortKey(b.priority))
   const activeTasks = tasks.filter((t) => !t.done)
   const isEscalationZone = parentTasks.length >= 20
   const totalSidebarCount = completedItems.length + archivedBatches.length
@@ -206,6 +211,7 @@ export function IntensiveTodos() {
               onDelete={deleteTask}
               onAdd={addTask}
               onSelect={setSelectedTask}
+              onPriorityChange={updateTaskPriority}
             />
           ) : (
             <MobileArchiveView
@@ -243,6 +249,7 @@ export function IntensiveTodos() {
                       onToggle={toggleTask}
                       onDelete={deleteTask}
                       onSelect={setSelectedTask}
+                      onPriorityChange={updateTaskPriority}
                     />
                   ))
                 )}
@@ -343,14 +350,16 @@ function MobileActiveView({
   onDelete,
   onAdd,
   onSelect,
+  onPriorityChange,
 }: {
-  parentTasks: { id: string; text: string; done: boolean; createdAt: number; parentId?: string; childIds?: string[] }[]
-  allTasks: { id: string; text: string; done: boolean; createdAt: number; parentId?: string; childIds?: string[] }[]
+  parentTasks: { id: string; text: string; done: boolean; createdAt: number; parentId?: string; childIds?: string[]; priority?: TaskPriority }[]
+  allTasks: { id: string; text: string; done: boolean; createdAt: number; parentId?: string; childIds?: string[]; priority?: TaskPriority }[]
   isEscalationZone: boolean
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onAdd: (text: string) => void
   onSelect: (id: string) => void
+  onPriorityChange: (id: string, priority: TaskPriority) => void
 }) {
   return (
     <div
@@ -378,6 +387,7 @@ function MobileActiveView({
                 onToggle={onToggle}
                 onDelete={onDelete}
                 onSelect={onSelect}
+                onPriorityChange={onPriorityChange}
               />
             ))
           )}

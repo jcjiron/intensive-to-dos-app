@@ -4,7 +4,8 @@ import { useRef, useState, useCallback } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Trash2, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { Task } from "@/lib/store"
+import { PRIORITY_LABELS, PRIORITY_COLORS } from "@/lib/task-priority"
+import type { Task, TaskPriority } from "@/lib/store"
 
 interface TaskItemProps {
   task: Task
@@ -12,6 +13,7 @@ interface TaskItemProps {
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onSelect: (id: string) => void
+  onPriorityChange?: (id: string, priority: TaskPriority) => void
 }
 
 export function TaskItem({
@@ -20,6 +22,7 @@ export function TaskItem({
   onToggle,
   onDelete,
   onSelect,
+  onPriorityChange,
 }: TaskItemProps) {
   const [swiping, setSwiping] = useState(false)
   const [swipeX, setSwipeX] = useState(0)
@@ -168,6 +171,14 @@ export function TaskItem({
             </span>
           </div>
 
+          {/* Priority Chip */}
+          {!task.parentId && (
+            <PriorityChip
+              priority={task.priority || "not-urgent-not-important"}
+              onPriorityChange={(priority) => onPriorityChange?.(task.id, priority)}
+            />
+          )}
+
           <button
             onClick={handleDeleteClick}
             className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive hidden md:flex"
@@ -179,6 +190,71 @@ export function TaskItem({
           <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
         </div>
       </div>
+    </div>
+  )
+}
+
+interface PriorityChipProps {
+  priority: TaskPriority
+  onPriorityChange: (priority: TaskPriority) => void
+}
+
+function PriorityChip({ priority, onPriorityChange }: PriorityChipProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const priorities: TaskPriority[] = [
+    "urgent-important",
+    "important-not-urgent",
+    "urgent-not-important",
+    "not-urgent-not-important",
+  ]
+
+  const currentColors = PRIORITY_COLORS[priority]
+
+  const handlePrioritySelect = (newPriority: TaskPriority) => {
+    onPriorityChange(newPriority)
+    setIsOpen(false)
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "px-2 py-1 rounded border text-xs font-medium transition-colors shrink-0",
+          currentColors.bg,
+          currentColors.border,
+          currentColors.text
+        )}
+        title={priority}
+      >
+        {PRIORITY_LABELS[priority]}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1 bg-card border rounded-lg shadow-md z-10 min-w-max">
+          {priorities.map((p) => {
+            const colors = PRIORITY_COLORS[p]
+            const isSelected = p === priority
+            return (
+              <button
+                key={p}
+                onClick={() => handlePrioritySelect(p)}
+                className={cn(
+                  "w-full px-3 py-2 text-xs text-left hover:bg-muted transition-colors",
+                  "border-b last:border-b-0",
+                  isSelected && "bg-muted font-semibold"
+                )}
+                title={p}
+              >
+                <span className={cn("font-medium", colors.text)}>
+                  {PRIORITY_LABELS[p]}
+                </span>{" "}
+                {p}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
